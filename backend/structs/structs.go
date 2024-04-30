@@ -13,8 +13,8 @@ type AnimeSeason struct {
 type Anime struct {
 	Sources      []string    `json:"sources"`
 	Title        string      `json:"title"`
-	Type         []string    `json:"type"`
-	Episodes     string      `json:"episodes"`
+	Type         string      `json:"type"`
+	Episodes     int         `json:"episodes"`
 	Status       string      `json:"status"`
 	AnimeSeason  AnimeSeason `json:"animeSeason"`
 	Picture      string      `json:"picture"`

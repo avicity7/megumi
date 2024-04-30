@@ -1,31 +1,34 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"megumi/structs"
+	"megumi/config"
+	"megumi/routes"
+	"net/http"
 	"os"
-	"slices"
-	"strings"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	jsonFile, err := os.Open("../../anime-offline-database/anime-offline-database.json")
-	if err != nil {
-		fmt.Println("Error opening file")
+	godotenv.Load()
+	r := chi.NewRouter()
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://open-house-bus-tracker.vercel.app", "http://localhost:5173"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowCredentials: true,
+	}))
+	r.Use(middleware.Logger)
+	config.Connect(r)
+
+	routes.Anime(r)
+
+	env := os.Getenv("ENV")
+	if env == "PROD" {
+		http.ListenAndServeTLS(":3000", "fullchain.pem", "privkey.pem", r)
+	} else {
+		http.ListenAndServe("127.0.0.1:3000", r)
 	}
-
-	fmt.Println("Opened")
-	bytes, _ := io.ReadAll(jsonFile)
-
-	var root structs.Root
-
-	json.Unmarshal(bytes, &root)
-
-	animeArray := root.Data
-	idx := slices.IndexFunc(animeArray, func(anime structs.Anime) bool { return strings.Contains(anime.Title, "Re:LIFE") })
-	fmt.Println(idx)
-
-	defer jsonFile.Close()
 }
